@@ -12,6 +12,7 @@ import {
   MemberNode,
 } from "../decompiler/DecompiledTreeProvider";
 import { DecompiledCode, LanguageName } from "../protocol/DecompileResponse";
+import CodeViewer from "../codeviewer/CodeViewer";
 
 let lastSelectedNode: MemberNode | undefined = undefined;
 
@@ -39,7 +40,7 @@ export function registerShowDecompiledCode(
 
 function showCode(code?: DecompiledCode) {
   if (code?.[LanguageName.IL] && code?.[LanguageName.CSharp]) {
-    showCodeInEditor(code[LanguageName.IL], "text", vscode.ViewColumn.Two);
+    // showCodeInEditor(code[LanguageName.IL], "text", vscode.ViewColumn.Two);
     showCodeInEditor(
       code[LanguageName.CSharp],
       "csharp",
@@ -53,28 +54,32 @@ function showCodeInEditor(
   language: string,
   viewColumn: vscode.ViewColumn
 ) {
-  const tempFileName = new Date().getTime().toString();
-  const untitledFileName = `${path.join(tempDir, tempFileName)}.${
-    language === "csharp" ? "cs" : "il"
-  }`;
-  const writeStream = fs.createWriteStream(untitledFileName, { flags: "w" });
-  writeStream.write(code);
-  writeStream.on("finish", async () => {
-    try {
-      const document = await vscode.workspace.openTextDocument(
-        untitledFileName
-      );
-      await vscode.window.showTextDocument(document, viewColumn, true);
-      await vscode.commands.executeCommand("revealLine", {
-        lineNumber: 1,
-        at: "top",
-      });
-    } catch (errorReason) {
-      vscode.window.showErrorMessage(
-        "[Error] ilspy-vscode encountered an error while trying to open text document: " +
-          errorReason
-      );
-    }
-  });
-  writeStream.end();
+  // const tempFileName = new Date().getTime().toString();
+  // const untitledFileName = `${path.join(tempDir, tempFileName)}.${
+  //   language === "csharp" ? "cs" : "il"
+  // }`;
+  // const writeStream = fs.createWriteStream(untitledFileName, { flags: "w" });
+  // writeStream.write(code);
+  // writeStream.on("finish", async () => {
+  //   try {
+  //     const document = await vscode.workspace.openTextDocument(
+  //       untitledFileName
+  //     );
+  //     await vscode.window.showTextDocument(document, viewColumn, true);
+  //     await vscode.commands.executeCommand("revealLine", {
+  //       lineNumber: 1,
+  //       at: "top",
+  //     });
+  //   } catch (errorReason) {
+  //     vscode.window.showErrorMessage(
+  //       "[Error] ilspy-vscode encountered an error while trying to open text document: " +
+  //         errorReason
+  //     );
+  //   }
+  // });
+  // writeStream.end();
+
+  const codeViewer = new CodeViewer();
+  codeViewer.show(viewColumn);
+  codeViewer.setCode(code);
 }
