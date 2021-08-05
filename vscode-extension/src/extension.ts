@@ -98,7 +98,7 @@ export async function activate(context: ExtensionContext) {
   disposables.push(
     registerDecompileAssemblyViaDialog(decompileTreeProvider, decompileTreeView)
   );
-  disposables.push(registerShowDecompiledCode(decompileTreeProvider));
+  disposables.push(registerShowDecompiledCode(context, decompileTreeProvider));
   disposables.push(registerUnloadAssembly(decompileTreeProvider));
 
   context.subscriptions.push(...disposables);

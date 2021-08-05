@@ -5,11 +5,23 @@
 
 import * as vscode from "vscode";
 import * as shiki from "shiki";
+import * as path from "path";
 
 export default class CodeViewer {
   private webViewPanel?: vscode.WebviewPanel;
+  private code: string = "";
 
-  constructor() {}
+  constructor(context: vscode.ExtensionContext) {
+    vscode.workspace.onDidChangeConfiguration(
+      (change) => {
+        if (change.affectsConfiguration("workbench.colorTheme")) {
+          this.updateTheme();
+        }
+      },
+      undefined,
+      context.subscriptions
+    );
+  }
 
   show(viewColumn: vscode.ViewColumn) {
     if (!this.webViewPanel) {
@@ -22,12 +34,17 @@ export default class CodeViewer {
     }
   }
 
-  setCode(code: string) {
+  updateTheme() {
+    this.setCode(this.code);
+  }
+
+  async setCode(code: string) {
+    this.code = code;
     if (this.webViewPanel) {
-      const theme = getCurrentTheme();
+      const theme = await getThemeMatchingToVSCode();
       shiki
         .getHighlighter({
-          theme: "dark-plus",
+          theme,
         })
         .then((highlighter) => {
           const formattedCode = highlighter.codeToHtml(code, "c#");
@@ -61,10 +78,53 @@ export default class CodeViewer {
   }
 }
 
-function getCurrentTheme() {
+function getCurrentTheme(): string | undefined {
   return vscode.workspace.getConfiguration("workbench").get("colorTheme");
+}
+
+const themeMappings: { [key: string]: string } = {
+  "Visual Studio Light": "light-plus",
+  "Visual Studio 2019 Light": "light-plus",
+  "Default Light+": "light-plus",
+  "Visual Studio Dark": "dark-plus",
+  "Visual Studio 2019 Dark": "dark-plus",
+  "Default Dark+": "dark-plus",
+};
+
+async function getThemeMatchingToVSCode() {
+  const currentTheme = getCurrentTheme();
+  if (currentTheme) {
+    if (themeMappings[currentTheme]) {
+      return themeMappings[currentTheme];
+    } else {
+      const colorThemePath = getCurrentThemePath(currentTheme);
+      if (colorThemePath) {
+        const theme = await shiki.loadTheme(colorThemePath);
+        theme.name = "something";
+        return theme;
+      }
+    }
+  }
+
+  return "Default Dark+";
 }
 
 function getEditorTabSize() {
   return vscode.workspace.getConfiguration("editor").get("tabSize") ?? 4;
+}
+
+function getCurrentThemePath(themeName: string) {
+  for (const ext of vscode.extensions.all) {
+    const themes =
+      ext.packageJSON.contributes && ext.packageJSON.contributes.themes;
+    if (!themes) {
+      continue;
+    }
+    const theme = themes.find(
+      (theme: any) => theme.label === themeName || theme.id === themeName
+    );
+    if (theme) {
+      return path.join(ext.extensionPath, theme.path);
+    }
+  }
 }

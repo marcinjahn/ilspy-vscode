@@ -17,6 +17,7 @@ import CodeViewer from "../codeviewer/CodeViewer";
 let lastSelectedNode: MemberNode | undefined = undefined;
 
 export function registerShowDecompiledCode(
+  context: vscode.ExtensionContext,
   decompiledTreeProvider: DecompiledTreeProvider
 ) {
   return vscode.commands.registerCommand(
@@ -28,20 +29,21 @@ export function registerShowDecompiledCode(
 
       lastSelectedNode = node;
       if (node.decompiled) {
-        showCode(node.decompiled);
+        showCode(context, node.decompiled);
       } else {
         const code = await decompiledTreeProvider.getCode(node);
         node.decompiled = code;
-        showCode(node.decompiled);
+        showCode(context, node.decompiled);
       }
     }
   );
 }
 
-function showCode(code?: DecompiledCode) {
+function showCode(context: vscode.ExtensionContext, code?: DecompiledCode) {
   if (code?.[LanguageName.IL] && code?.[LanguageName.CSharp]) {
     // showCodeInEditor(code[LanguageName.IL], "text", vscode.ViewColumn.Two);
     showCodeInEditor(
+      context,
       code[LanguageName.CSharp],
       "csharp",
       vscode.ViewColumn.One
@@ -50,6 +52,7 @@ function showCode(code?: DecompiledCode) {
 }
 
 function showCodeInEditor(
+  context: vscode.ExtensionContext,
   code: string,
   language: string,
   viewColumn: vscode.ViewColumn
@@ -79,7 +82,7 @@ function showCodeInEditor(
   // });
   // writeStream.end();
 
-  const codeViewer = new CodeViewer();
+  const codeViewer = new CodeViewer(context);
   codeViewer.show(viewColumn);
   codeViewer.setCode(code);
 }
