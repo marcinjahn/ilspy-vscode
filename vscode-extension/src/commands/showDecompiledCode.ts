@@ -7,12 +7,14 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
 import * as tempDir from "temp-dir";
-import {
-  DecompiledTreeProvider,
-  MemberNode,
-} from "../decompiler/DecompiledTreeProvider";
+import { DecompiledTreeProvider } from "../decompiler/DecompiledTreeProvider";
 import { DecompiledCode, LanguageName } from "../protocol/DecompileResponse";
 import CodeViewer from "../codeviewer/CodeViewer";
+import { MemberNode } from "../decompiler/MemberNode";
+import {
+  getIconByTokenType,
+  ThenableTreeIconPath,
+} from "../decompiler/decompilerUtils";
 
 let lastSelectedNode: MemberNode | undefined = undefined;
 
@@ -29,21 +31,27 @@ export function registerShowDecompiledCode(
 
       lastSelectedNode = node;
       if (node.decompiled) {
-        showCode(context, node.decompiled);
+        showCode(context, node.name, getIconByTokenType(node), node.decompiled);
       } else {
         const code = await decompiledTreeProvider.getCode(node);
         node.decompiled = code;
-        showCode(context, node.decompiled);
+        showCode(context, node.name, getIconByTokenType(node), node.decompiled);
       }
     }
   );
 }
 
-function showCode(context: vscode.ExtensionContext, code?: DecompiledCode) {
+function showCode(
+  context: vscode.ExtensionContext,
+  title: string,
+  iconPath: ThenableTreeIconPath | undefined,
+  code?: DecompiledCode
+) {
   if (code?.[LanguageName.IL] && code?.[LanguageName.CSharp]) {
-    // showCodeInEditor(code[LanguageName.IL], "text", vscode.ViewColumn.Two);
     showCodeInEditor(
       context,
+      title,
+      iconPath,
       code[LanguageName.CSharp],
       "csharp",
       vscode.ViewColumn.One
@@ -53,36 +61,15 @@ function showCode(context: vscode.ExtensionContext, code?: DecompiledCode) {
 
 function showCodeInEditor(
   context: vscode.ExtensionContext,
+  title: string,
+  iconPath: ThenableTreeIconPath | undefined,
   code: string,
   language: string,
   viewColumn: vscode.ViewColumn
 ) {
-  // const tempFileName = new Date().getTime().toString();
-  // const untitledFileName = `${path.join(tempDir, tempFileName)}.${
-  //   language === "csharp" ? "cs" : "il"
-  // }`;
-  // const writeStream = fs.createWriteStream(untitledFileName, { flags: "w" });
-  // writeStream.write(code);
-  // writeStream.on("finish", async () => {
-  //   try {
-  //     const document = await vscode.workspace.openTextDocument(
-  //       untitledFileName
-  //     );
-  //     await vscode.window.showTextDocument(document, viewColumn, true);
-  //     await vscode.commands.executeCommand("revealLine", {
-  //       lineNumber: 1,
-  //       at: "top",
-  //     });
-  //   } catch (errorReason) {
-  //     vscode.window.showErrorMessage(
-  //       "[Error] ilspy-vscode encountered an error while trying to open text document: " +
-  //         errorReason
-  //     );
-  //   }
-  // });
-  // writeStream.end();
-
   const codeViewer = new CodeViewer(context);
   codeViewer.show(viewColumn);
+  codeViewer.setTitle(title);
+  codeViewer.setIconPath(iconPath);
   codeViewer.setCode(code);
 }

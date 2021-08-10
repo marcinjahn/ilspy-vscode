@@ -11,10 +11,7 @@ import {
   Trace,
 } from "vscode-languageclient/node";
 import ILSpyBackend from "./decompiler/ILSpyBackend";
-import {
-  DecompiledTreeProvider,
-  MemberNode,
-} from "./decompiler/DecompiledTreeProvider";
+import { DecompiledTreeProvider } from "./decompiler/DecompiledTreeProvider";
 import { registerDecompileAssemblyInWorkspace } from "./commands/decompileAssemblyInWorkspace";
 import { registerDecompileAssemblyViaDialog } from "./commands/decompileAssemblyViaDialog";
 import { registerShowDecompiledCode } from "./commands/showDecompiledCode";
@@ -28,6 +25,7 @@ import {
   TreeView,
   window,
 } from "vscode";
+import { MemberNode } from "./decompiler/MemberNode";
 
 let client: LanguageClient;
 

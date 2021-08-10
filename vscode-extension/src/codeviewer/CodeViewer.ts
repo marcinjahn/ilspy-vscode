@@ -6,6 +6,7 @@
 import * as vscode from "vscode";
 import * as shiki from "shiki";
 import * as path from "path";
+import { ThenableTreeIconPath } from "../decompiler/decompilerUtils";
 
 export default class CodeViewer {
   private webViewPanel?: vscode.WebviewPanel;
@@ -31,6 +32,18 @@ export default class CodeViewer {
         viewColumn,
         {}
       );
+    }
+  }
+
+  setTitle(title: string) {
+    if (this.webViewPanel) {
+      this.webViewPanel.title = title;
+    }
+  }
+
+  setIconPath(iconPath: ThenableTreeIconPath | undefined) {
+    if (this.webViewPanel) {
+      this.webViewPanel.iconPath = iconPath;
     }
   }
 
