@@ -56,6 +56,11 @@
 				"command": "ilspy.unloadAssembly",
 				"title": "Unload Assembly",
 				"category": "ILSpy"
+			},
+			{
+				"command": "ilspy.selectLanguage",
+				"title": "Select output language",
+				"category": "ILSpy"
 			}
 		],
 		"menus": {

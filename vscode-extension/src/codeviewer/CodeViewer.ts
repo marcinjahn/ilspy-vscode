@@ -6,13 +6,32 @@
 import * as vscode from "vscode";
 import * as shiki from "shiki";
 import * as path from "path";
-import { ThenableTreeIconPath } from "../decompiler/decompilerUtils";
+import {
+  getIconByTokenType,
+  ThenableTreeIconPath,
+} from "../decompiler/decompilerUtils";
+import { LanguageName } from "../protocol/DecompileResponse";
+import { MemberNode } from "../decompiler/MemberNode";
+import { DecompiledTreeProvider } from "../decompiler/DecompiledTreeProvider";
 
 export default class CodeViewer {
   private webViewPanel?: vscode.WebviewPanel;
   private code: string = "";
+  private _language: LanguageName;
 
-  constructor(context: vscode.ExtensionContext) {
+  constructor(
+    private context: vscode.ExtensionContext,
+    initialLanguage: LanguageName,
+    private memberNode: MemberNode,
+    private decompiledTreeProvider: DecompiledTreeProvider,
+    private onStateChanged: (
+      viewer: CodeViewer,
+      isActive: boolean,
+      isAlive: boolean
+    ) => void
+  ) {
+    this._language = initialLanguage;
+
     vscode.workspace.onDidChangeConfiguration(
       (change) => {
         if (change.affectsConfiguration("workbench.colorTheme")) {
@@ -24,27 +43,64 @@ export default class CodeViewer {
     );
   }
 
-  show(viewColumn: vscode.ViewColumn) {
+  public async show(viewColumn: vscode.ViewColumn) {
     if (!this.webViewPanel) {
+      const node = this.memberNode;
+
       this.webViewPanel = vscode.window.createWebviewPanel(
         "ilspyCodeViewer",
         "ILSpy",
         viewColumn,
         {}
       );
+      this.webViewPanel.title = node.name;
+      this.webViewPanel.iconPath = getIconByTokenType(node);
+      this.webViewPanel.onDidChangeViewState(
+        (e) => {
+          this.onStateChanged(this, e.webviewPanel.visible, true);
+        },
+        null,
+        this.context.subscriptions
+      );
+      this.webViewPanel.onDidDispose(
+        () => {
+          this.onStateChanged(this, false, false);
+        },
+        undefined,
+        this.context.subscriptions
+      );
+
+      if (node.decompiled) {
+        this.setCode(node.decompiled[this._language]);
+      } else {
+        const code = await this.decompiledTreeProvider.getCode(node);
+        node.decompiled = code;
+        this.setCode(node.decompiled?.[this._language] ?? "");
+      }
+
+      this.onStateChanged(this, true, true);
     }
   }
 
-  setTitle(title: string) {
+  set title(title: string) {
     if (this.webViewPanel) {
       this.webViewPanel.title = title;
     }
   }
 
-  setIconPath(iconPath: ThenableTreeIconPath | undefined) {
+  set iconPath(iconPath: ThenableTreeIconPath | undefined) {
     if (this.webViewPanel) {
       this.webViewPanel.iconPath = iconPath;
     }
+  }
+
+  get language() {
+    return this._language;
+  }
+
+  set language(value: LanguageName) {
+    this._language = value;
+    this.showCode();
   }
 
   updateTheme() {
@@ -68,6 +124,17 @@ export default class CodeViewer {
     }
   }
 
+  private async showCode() {
+    const node = this.memberNode;
+    if (node.decompiled) {
+      this.setCode(node.decompiled[this._language] ?? "");
+    } else {
+      const code = await this.decompiledTreeProvider.getCode(node);
+      node.decompiled = code;
+      this.setCode(node.decompiled?.[this._language] ?? "");
+    }
+  }
+
   private getHtmlContent(code: string) {
     return `<!DOCTYPE html>
 <html lang="en">
@@ -76,6 +143,10 @@ export default class CodeViewer {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ILSpy</title>
     <style>
+        body {
+          height: 100%;
+          width: 100%;
+        }
         code {
             font-family: var(--vscode-editor-font-family) !important;
             font-size: var(--vscode-editor-font-size) !important;

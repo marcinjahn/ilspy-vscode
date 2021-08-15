@@ -9,18 +9,19 @@ import * as fs from "fs";
 import * as tempDir from "temp-dir";
 import { DecompiledTreeProvider } from "../decompiler/DecompiledTreeProvider";
 import { DecompiledCode, LanguageName } from "../protocol/DecompileResponse";
-import CodeViewer from "../codeviewer/CodeViewer";
 import { MemberNode } from "../decompiler/MemberNode";
 import {
   getIconByTokenType,
   ThenableTreeIconPath,
 } from "../decompiler/decompilerUtils";
+import { CodeViewerManager } from "../codeviewer/CodeViewerManager";
 
 let lastSelectedNode: MemberNode | undefined = undefined;
 
 export function registerShowDecompiledCode(
   context: vscode.ExtensionContext,
-  decompiledTreeProvider: DecompiledTreeProvider
+  decompiledTreeProvider: DecompiledTreeProvider,
+  codeViewerManager: CodeViewerManager
 ) {
   return vscode.commands.registerCommand(
     "showDecompiledCode",
@@ -30,46 +31,8 @@ export function registerShowDecompiledCode(
       }
 
       lastSelectedNode = node;
-      if (node.decompiled) {
-        showCode(context, node.name, getIconByTokenType(node), node.decompiled);
-      } else {
-        const code = await decompiledTreeProvider.getCode(node);
-        node.decompiled = code;
-        showCode(context, node.name, getIconByTokenType(node), node.decompiled);
-      }
+      const codeViewer = codeViewerManager.createViewer(node);
+      codeViewer.show(vscode.ViewColumn.One);
     }
   );
-}
-
-function showCode(
-  context: vscode.ExtensionContext,
-  title: string,
-  iconPath: ThenableTreeIconPath | undefined,
-  code?: DecompiledCode
-) {
-  if (code?.[LanguageName.IL] && code?.[LanguageName.CSharp]) {
-    showCodeInEditor(
-      context,
-      title,
-      iconPath,
-      code[LanguageName.CSharp],
-      "csharp",
-      vscode.ViewColumn.One
-    );
-  }
-}
-
-function showCodeInEditor(
-  context: vscode.ExtensionContext,
-  title: string,
-  iconPath: ThenableTreeIconPath | undefined,
-  code: string,
-  language: string,
-  viewColumn: vscode.ViewColumn
-) {
-  const codeViewer = new CodeViewer(context);
-  codeViewer.show(viewColumn);
-  codeViewer.setTitle(title);
-  codeViewer.setIconPath(iconPath);
-  codeViewer.setCode(code);
 }

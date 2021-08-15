@@ -26,6 +26,7 @@ import {
   window,
 } from "vscode";
 import { MemberNode } from "./decompiler/MemberNode";
+import { CodeViewerManager } from "./codeviewer/CodeViewerManager";
 
 let client: LanguageClient;
 
@@ -86,6 +87,10 @@ export async function activate(context: ExtensionContext) {
     }
   );
   disposables.push(decompileTreeView);
+  const codeViewerManager = new CodeViewerManager(
+    context,
+    decompileTreeProvider
+  );
 
   disposables.push(
     registerDecompileAssemblyInWorkspace(
@@ -96,7 +101,13 @@ export async function activate(context: ExtensionContext) {
   disposables.push(
     registerDecompileAssemblyViaDialog(decompileTreeProvider, decompileTreeView)
   );
-  disposables.push(registerShowDecompiledCode(context, decompileTreeProvider));
+  disposables.push(
+    registerShowDecompiledCode(
+      context,
+      decompileTreeProvider,
+      codeViewerManager
+    )
+  );
   disposables.push(registerUnloadAssembly(decompileTreeProvider));
 
   context.subscriptions.push(...disposables);
