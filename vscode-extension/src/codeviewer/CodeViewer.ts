@@ -13,6 +13,7 @@ import {
 import { LanguageName } from "../protocol/DecompileResponse";
 import { MemberNode } from "../decompiler/MemberNode";
 import { DecompiledTreeProvider } from "../decompiler/DecompiledTreeProvider";
+import { languageDisplayName } from "./languageDisplayName";
 
 export default class CodeViewer {
   private webViewPanel?: vscode.WebviewPanel;
@@ -53,7 +54,7 @@ export default class CodeViewer {
         viewColumn,
         {}
       );
-      this.webViewPanel.title = node.name;
+      this.updateTitle();
       this.webViewPanel.iconPath = getIconByTokenType(node);
       this.webViewPanel.onDidChangeViewState(
         (e) => {
@@ -70,27 +71,8 @@ export default class CodeViewer {
         this.context.subscriptions
       );
 
-      if (node.decompiled) {
-        this.setCode(node.decompiled[this._language]);
-      } else {
-        const code = await this.decompiledTreeProvider.getCode(node);
-        node.decompiled = code;
-        this.setCode(node.decompiled?.[this._language] ?? "");
-      }
-
+      this.showCode();
       this.onStateChanged(this, true, true);
-    }
-  }
-
-  set title(title: string) {
-    if (this.webViewPanel) {
-      this.webViewPanel.title = title;
-    }
-  }
-
-  set iconPath(iconPath: ThenableTreeIconPath | undefined) {
-    if (this.webViewPanel) {
-      this.webViewPanel.iconPath = iconPath;
     }
   }
 
@@ -100,11 +82,20 @@ export default class CodeViewer {
 
   set language(value: LanguageName) {
     this._language = value;
+    this.updateTitle();
     this.showCode();
   }
 
   updateTheme() {
     this.setCode(this.code);
+  }
+
+  updateTitle() {
+    if (this.webViewPanel) {
+      this.webViewPanel.title = `${this.memberNode.name} (${
+        languageDisplayName[this._language] ?? "decompiled"
+      })`;
+    }
   }
 
   async setCode(code: string) {
