@@ -6,10 +6,7 @@
 import * as vscode from "vscode";
 import * as shiki from "shiki";
 import * as path from "path";
-import {
-  getIconByTokenType,
-  ThenableTreeIconPath,
-} from "../decompiler/decompilerUtils";
+import { getIconByTokenType } from "../decompiler/decompilerUtils";
 import { LanguageName } from "../protocol/DecompileResponse";
 import { MemberNode } from "../decompiler/MemberNode";
 import { DecompiledTreeProvider } from "../decompiler/DecompiledTreeProvider";

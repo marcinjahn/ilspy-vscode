@@ -13,7 +13,6 @@ const languageSelectorCommandId = "ilspy.selectLanguage";
 export class CodeViewerManager {
   private viewers: CodeViewer[] = [];
   private _activeViewer?: CodeViewer;
-  private defaultLanguage: LanguageName = LanguageName.CSharp;
   private languageSelectorStatusBarItem?: vscode.StatusBarItem;
 
   constructor(
@@ -33,7 +32,7 @@ export class CodeViewerManager {
   public createViewer(memberNode: MemberNode) {
     const newViewer = new CodeViewer(
       this.context,
-      this.defaultLanguage,
+      getDefaultOutputLanguage(),
       memberNode,
       this.decompiledTreeProvider,
       this.onViewerStateChanged
@@ -133,4 +132,11 @@ function setCodeViewerActiveContext(active: boolean) {
 
 function formatButtonText(language: LanguageName) {
   return `ILSpy: ${languageDisplayName[language]}`;
+}
+
+function getDefaultOutputLanguage() {
+  return languageFromDisplayName(
+    vscode.workspace.getConfiguration("ilspy").get("defaultOutputLanguage") ??
+      "C#"
+  ) as LanguageName;
 }

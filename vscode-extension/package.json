@@ -25,6 +25,26 @@
 	],
 	"main": "./out/extension.js",
 	"contributes": {
+		"configuration": [
+			{
+				"title": "ILSpy",
+				"properties": {
+					"ilspy.defaultOutputLanguage": {
+						"description": "Defines to which language ILSpy will decompile assemblies by default. Note that you can choose a different language for a specific view later.",
+						"type": "string",
+						"default": "C#",
+						"enum": [
+							"C#",
+							"IL"
+						],
+						"enumDescriptions": [
+							"Decompile to C# by default",
+							"Decompile to readable IL instructions by default"
+						]
+					}
+				}
+			}
+		],
 		"views": {
 			"explorer": [
 				{
