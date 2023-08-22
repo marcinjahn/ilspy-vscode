@@ -40,7 +40,7 @@ public class TreeNodeDecompilationTests
     {
         var application = CreateTestApplication();
         var nodeMetadata = new NodeMetadata(AssemblyPath, NodeType.Assembly, AssemblyPath, 0, 0);
-        Assert.Equal(
+        CodeAssert.Equal(
 $"// {AssemblyPath}" +
 @"
 // TestAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
@@ -74,7 +74,7 @@ using System.Runtime.Versioning;
     {
         var application = CreateTestApplication();
         var nodeMetadata = new NodeMetadata(AssemblyPath, NodeType.Namespace, "A.B.C.D", 0, 0);
-        Assert.Equal(
+        CodeAssert.Equal(
 @"namespace A.B.C.D { }",
             application.TreeNodeProviders.ForNode(nodeMetadata).Decompile(nodeMetadata)?[LanguageNames.CSharp]);
     }
@@ -84,7 +84,7 @@ using System.Runtime.Versioning;
     {
         var application = CreateTestApplication();
         var nodeMetadata = new NodeMetadata(AssemblyPath, NodeType.Namespace, "", 0, 0);
-        Assert.Equal(
+        CodeAssert.Equal(
 @"namespace <global> { }",
             application.TreeNodeProviders.ForNode(nodeMetadata).Decompile(nodeMetadata)?[LanguageNames.CSharp]);
     }
@@ -95,7 +95,7 @@ using System.Runtime.Versioning;
         var application = CreateTestApplication();
         int typeToken = GetTypeToken(application.DecompilerBackend, "Generics", "AClass");
         var nodeMetadata = new NodeMetadata(AssemblyPath, NodeType.Class, "", typeToken, 0);
-        Assert.Equal(
+        CodeAssert.Equal(
 @"namespace Generics;
 
 public class AClass
@@ -126,7 +126,7 @@ public class AClass
         var application = CreateTestApplication();
         int typeToken = GetTypeToken(application.DecompilerBackend, "TestAssembly", "ISomeInterface");
         var nodeMetadata = new NodeMetadata(AssemblyPath, NodeType.Interface, "", typeToken, 0);
-        Assert.Equal(
+        CodeAssert.Equal(
 @"namespace TestAssembly;
 
 public interface ISomeInterface
@@ -143,7 +143,7 @@ public interface ISomeInterface
         var application = CreateTestApplication();
         int typeToken = GetTypeToken(application.DecompilerBackend, "TestAssembly", "SomeStruct");
         var nodeMetadata = new NodeMetadata(AssemblyPath, NodeType.Struct, "", typeToken, 0);
-        Assert.Equal(
+        CodeAssert.Equal(
 @"namespace TestAssembly;
 
 internal struct SomeStruct
@@ -160,7 +160,7 @@ internal struct SomeStruct
         var application = CreateTestApplication();
         int typeToken = GetTypeToken(application.DecompilerBackend, "TestAssembly", "SomeEnum");
         var nodeMetadata = new NodeMetadata(AssemblyPath, NodeType.Enum, "", typeToken, 0);
-        Assert.Equal(
+        CodeAssert.Equal(
 @"namespace TestAssembly;
 
 public enum SomeEnum
@@ -180,7 +180,7 @@ public enum SomeEnum
         int typeToken = GetTypeToken(application.DecompilerBackend, "TestAssembly", "SomeClass");
         int memberToken = GetMemberToken(application.DecompilerBackend, typeToken, "ToString() : string");
         var nodeMetadata = new NodeMetadata(AssemblyPath, NodeType.Method, "", memberToken, typeToken);
-        Assert.Equal(
+        CodeAssert.Equal(
 @"public override string ToString()
 {
     return base.ToString();
@@ -196,7 +196,7 @@ public enum SomeEnum
         int typeToken = GetTypeToken(application.DecompilerBackend, "TestAssembly", "SomeClass");
         int memberToken = GetMemberToken(application.DecompilerBackend, typeToken, "_ProgId");
         var nodeMetadata = new NodeMetadata(AssemblyPath, NodeType.Field, "", memberToken, typeToken);
-        Assert.Equal(
+        CodeAssert.Equal(
 @"private int _ProgId;
 ",
             application.TreeNodeProviders.ForNode(nodeMetadata).Decompile(nodeMetadata)?[LanguageNames.CSharp]);
@@ -209,7 +209,7 @@ public enum SomeEnum
         int typeToken = GetTypeToken(application.DecompilerBackend, "TestAssembly", "SomeClass");
         int memberToken = GetMemberToken(application.DecompilerBackend, typeToken, "ProgId");
         var nodeMetadata = new NodeMetadata(AssemblyPath, NodeType.Property, "", memberToken, typeToken);
-        Assert.Equal(
+        CodeAssert.Equal(
 @"public int ProgId
 {
     get
@@ -232,7 +232,7 @@ public enum SomeEnum
         int typeToken = GetTypeToken(application.DecompilerBackend, "TestAssembly", "SomeClass");
         int memberToken = GetMemberToken(application.DecompilerBackend, typeToken, "SomeClass(int)");
         var nodeMetadata = new NodeMetadata(AssemblyPath, NodeType.Method, "", memberToken, typeToken);
-        Assert.Equal(
+        CodeAssert.Equal(
 @"internal SomeClass(int ProgramId)
 {
     ProgId = ProgramId;
@@ -246,7 +246,7 @@ public enum SomeEnum
     {
         var application = CreateTestApplication();
         var nodeMetadata = new NodeMetadata(AssemblyPath, NodeType.ReferencesRoot, "References", 0, 0);
-        Assert.Equal(
+        CodeAssert.Equal(
 @"// System.Runtime, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
             application.TreeNodeProviders.ForNode(nodeMetadata).Decompile(nodeMetadata)?[LanguageNames.CSharp]);
     }
@@ -257,7 +257,7 @@ public enum SomeEnum
         var application = CreateTestApplication();
         var nodeMetadata = new NodeMetadata(AssemblyPath, NodeType.AssemblyReference,
             "System.Runtime, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", 0, 0);
-        Assert.Equal(
+        CodeAssert.Equal(
 @"// System.Runtime, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
             application.TreeNodeProviders.ForNode(nodeMetadata).Decompile(nodeMetadata)?[LanguageNames.CSharp]);
     }
